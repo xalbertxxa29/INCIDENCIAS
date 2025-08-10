@@ -145,30 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- FUNCIÓN PARA OBTENER GEOLOCALIZACIÓN ---
-    function getGeolocation() {
-        return new Promise((resolve) => {
-            if (!navigator.geolocation) {
-                console.error("La geolocalización no es soportada por este navegador.");
-                resolve(null); // Resuelve con null si no hay soporte
-            } else {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        });
-                    },
-                    () => {
-                        console.error("No se pudo obtener la ubicación. El usuario pudo haber denegado el permiso.");
-                        showModal("No se pudo obtener la ubicación. Asegúrate de tener activado el GPS y dar permisos a la aplicación.");
-                        resolve(null); // Resuelve con null si el usuario deniega o hay error
-                    }
-                );
-            }
-        });
-    }
-
     // --- LÓGICA DE FOTOGRAFÍA ---
     fotoInput.addEventListener('change', e => {
         const file = e.target.files[0];
@@ -201,7 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.addEventListener('touchend', e => { e.preventDefault(); stopDraw(); });
     clearFirmaBtn.addEventListener('click', () => { ctx.clearRect(0, 0, canvas.width, canvas.height); hasSigned = false; });
 
-
     // --- LÓGICA DE ENVÍO DEL FORMULARIO ---
     form.addEventListener('submit', async e => {
         e.preventDefault();
@@ -214,9 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loadingOverlay.hidden = false;
 
         try {
-            // Obtener geolocalización
-            const location = await getGeolocation();
-
             let fotoURL = null;
             if (fotoInput.files[0]) {
                 const fotoFile = fotoInput.files[0];
@@ -230,25 +202,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const firmaSnapshot = await firmaRef.put(firmaBlob);
             const firmaURL = await firmaSnapshot.ref.getDownloadURL();
 
-            // --- OBJETO DE DATOS ACTUALIZADO CON GEOLOCALIZACIÓN ---
             const incidenciaData = {
-                // Datos del formulario
                 tipo: tipoIncidenciaInput.value,
                 ubicacion: ubicacionInput.value,
                 descripcion: document.getElementById('descripcion').value,
                 fotoURL: fotoURL,
                 firmaURL: firmaURL,
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp(),
-                
-                // Datos del usuario que registra
                 usuarioEmail: currentUser.email,
                 usuarioId: currentUser.email.split('@')[0],
                 nombreCompleto: `${currentUserData.NOMBRES} ${currentUserData.APELLIDOS}`,
                 cliente: currentUserData.CLIENTE,
-                unidad: currentUserData.UNIDAD,
-
-                // Datos de geolocalización
-                geolocalizacion: location ? new firebase.firestore.GeoPoint(location.latitude, location.longitude) : null
+                unidad: currentUserData.UNIDAD
             };
 
             await db.collection('INCIDENCIAS_REGISTRADAS').add(incidenciaData);
@@ -262,3 +227,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
