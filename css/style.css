@@ -23,7 +23,11 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: url('../imagenes/background.png') center/cover no-repeat;
+  /* Nuevo fondo degradado profesional */
+  background-color: #1a202c;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
+    radial-gradient(at 98% 1%, hsla(220, 39%, 21%, 1) 0px, transparent 50%);
   color: var(--color-dark-gray);
   line-height: 1.6;
 }
@@ -48,6 +52,7 @@ body {
   background-color: var(--color-light-gray);
   border-radius: var(--radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative; /* Para posicionar el botón de volver */
 }
 
 .login-container {
@@ -425,7 +430,7 @@ input[type="file"] {
   to { transform: rotate(360deg); }
 }
 
-/* --- 10. Estilos para la Página de Menú (NUEVOS) --- */
+/* --- 10. Estilos para la Página de Menú --- */
 .menu-wrapper {
   display: flex;
   justify-content: center;
@@ -465,7 +470,14 @@ input[type="file"] {
 
 #user-details {
   font-size: 1rem;
+  color: #333;
+}
+
+.user-client-unit {
+  font-size: 0.9rem;
   color: #6c757d;
+  font-weight: 600;
+  margin-top: 0.25rem;
 }
 
 .menu-options {
@@ -519,8 +531,35 @@ input[type="file"] {
   color: var(--color-primary);
 }
 
+/* --- 11. Botones de Volver (NUEVOS) --- */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-secondary);
+  color: var(--color-white);
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+}
 
-/* --- 11. Responsive Design --- */
+.btn-back:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.btn-back-bottom {
+  position: static;
+  margin-top: 2rem;
+}
+
+
+/* --- 12. Responsive Design --- */
 @media (max-width: 768px) {
   body {
     align-items: flex-start;
@@ -535,5 +574,11 @@ input[type="file"] {
   }
   h1, .login-title {
     font-size: 1.5rem;
+  }
+  .btn-back {
+    position: static;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    justify-content: center;
   }
 }

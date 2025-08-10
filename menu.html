@@ -15,6 +15,8 @@
                 <img src="imagenes/logo.png" alt="Liderman Logo" class="menu-logo">
                 <h1 id="welcome-title">Bienvenido</h1>
                 <p id="user-details">Cargando...</p>
+                <!-- NUEVO ELEMENTO PARA CLIENTE Y UNIDAD -->
+                <p id="user-client-unit" class="user-client-unit"></p>
             </div>
             <div class="menu-options">
                 <a href="incidencia.html" class="menu-button-improved">
@@ -53,7 +55,10 @@
                     const userDoc = await db.collection('USUARIOS').doc(userId).get();
                     if (userDoc.exists) {
                         const userData = userDoc.data();
+                        // Poblar nombre y apellidos
                         document.getElementById('user-details').textContent = `${userData.NOMBRES} ${userData.APELLIDOS}`;
+                        // Poblar cliente y unidad
+                        document.getElementById('user-client-unit').textContent = `${userData.CLIENTE} - ${userData.UNIDAD}`;
                     } else {
                         document.getElementById('user-details').textContent = user.email;
                     }
