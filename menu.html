@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Font Awesome para los íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+</head>
+<body>
+    <div class="menu-wrapper">
+        <div class="menu-card-improved">
+            <div class="menu-header">
+                <img src="imagenes/logo.png" alt="Liderman Logo" class="menu-logo">
+                <h1 id="welcome-title">Bienvenido</h1>
+                <p id="user-details">Cargando...</p>
+            </div>
+            <div class="menu-options">
+                <a href="incidencia.html" class="menu-button-improved">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Registrar Nueva Incidencia</span>
+                </a>
+                <a href="registros.html" class="menu-button-improved">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Ver Registros</span>
+                </a>
+            </div>
+            <div class="menu-footer">
+                <a href="#" id="logout-btn" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script>
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Verificar el estado del usuario y mostrar su información
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const userId = user.email.split('@')[0];
+                    const userDoc = await db.collection('USUARIOS').doc(userId).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        document.getElementById('user-details').textContent = `${userData.NOMBRES} ${userData.APELLIDOS}`;
+                    } else {
+                        document.getElementById('user-details').textContent = user.email;
+                    }
+                } catch (error) {
+                    console.error("Error al obtener datos del usuario:", error);
+                    document.getElementById('user-details').textContent = user.email;
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Lógica para cerrar sesión
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.signOut().then(() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        for (let name of names) caches.delete(name);
+                    });
+                }
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error al cerrar sesión:', error);
+            });
+        });
+    </script>
+</body>
+</html>
