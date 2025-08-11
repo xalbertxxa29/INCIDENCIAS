@@ -1,4 +1,4 @@
-// js/auth.js (COMPLETAMENTE ACTUALIZADO)
+// js/auth.js
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- INICIALIZACIÓN ---
@@ -10,14 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const auth = firebase.auth();
-  const db = firebase.firestore(); // Necesitamos acceso a Firestore
+  const db = firebase.firestore();
   const loadingOverlay = document.getElementById("loadingOverlay");
 
   // --- FUNCIÓN DE MODAL PARA MENSAJES ---
   function showAuthModal(message) {
-      // Si ya hay un modal, no crear otro
       if (document.querySelector('.modal-overlay')) return;
-
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
       const box = document.createElement('div');
@@ -33,137 +31,127 @@ document.addEventListener("DOMContentLoaded", () => {
           document.body.removeChild(overlay);
       });
   }
-  // --- LÓGICA DE INICIO DE SESIÓN ---//
-  // --- LÓGICA DE LOGIN (ACTUALIZADA) ---
-    const loginForm = document.getElementById("login-form");
 
-      loginForm.addEventListener("submit", async e => {
-        e.preventDefault();
-        loadingOverlay.hidden = false;
+  // --- LÓGICA DE LOGIN ---
+  const loginForm = document.getElementById("login-form");
 
-        const userId = document.getElementById("login-id").value.trim();
-        const password = document.getElementById("login-password").value.trim();
-        const rememberMe = document.getElementById("remember-me-checkbox").checked;
+  loginForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    loadingOverlay.hidden = false;
 
-        if (!userId || !password) {
-            showAuthModal("Por favor, completa todos los campos.");
+    const userId = document.getElementById("login-id").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+    const rememberMe = document.getElementById("remember-me-checkbox").checked;
+
+    if (!userId || !password) {
+        showAuthModal("Por favor, completa todos los campos.");
+        loadingOverlay.hidden = true;
+        return;
+    }
+
+    try {
+        const persistence = rememberMe ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+        await auth.setPersistence(persistence);
+
+        const userDocRef = db.collection('USUARIOS').doc(userId);
+        const docSnap = await userDocRef.get();
+
+        if (!docSnap.exists) {
+            showAuthModal("El ID de usuario no está registrado.");
             loadingOverlay.hidden = true;
             return;
         }
 
-        try {
-            // 1. Establecer la persistencia de la sesión ANTES de iniciar sesión
-            const persistence = rememberMe ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
-            await auth.setPersistence(persistence);
-
-            // El resto del flujo de inicio de sesión...
-            const userDocRef = db.collection('USUARIOS').doc(userId);
-            const docSnap = await userDocRef.get();
-
-            if (!docSnap.exists) {
-                showAuthModal("El ID de usuario no está registrado.");
-                loadingOverlay.hidden = true;
-                return;
-            }
-
-            const userData = docSnap.data();
-            const estadoUsuario = userData.ESTADO;
-
-            if (estadoUsuario !== 'ACTIVO') {
-                const mensaje = `Su usuario está en estado "${estadoUsuario || 'INDEFINIDO'}", comunícate con tu zonal.`;
-                showAuthModal(mensaje);
-                loadingOverlay.hidden = true;
-                return;
-            }
-
-            const cliente = userData.CLIENTE;
-            const constructedEmail = `${userId}@${cliente}.com.pe`;
-
-            await auth.signInWithEmailAndPassword(constructedEmail, password);
-            window.location.href = "menu.html";
-
-        } catch (error) {
-            console.error("Error de inicio de sesión:", error);
-            if (error.code === 'auth/wrong-password') {
-                showAuthModal("Contraseña incorrecta.");
-            } else {
-                showAuthModal("Ocurrió un error al iniciar sesión.");
-            }
-        } finally {
+        const userData = docSnap.data();
+        const estadoUsuario = userData.ESTADO;
+        
+        if (estadoUsuario !== 'ACTIVO') {
+            const mensaje = `Su usuario está en estado "${estadoUsuario || 'INDEFINIDO'}", comunícate con tu zonal.`;
+            showAuthModal(mensaje);
             loadingOverlay.hidden = true;
+            return;
         }
-    });
 
+        const cliente = userData.CLIENTE;
+        const constructedEmail = `${userId}@${cliente}.com.pe`;
 
-  // --- LÓGICA DE REGISTRO (COMPLETAMENTE ACTUALIZADA) ---
-const registerForm = document.getElementById("register-form");
+        await auth.signInWithEmailAndPassword(constructedEmail, password);
+        window.location.href = "menu.html";
+
+    } catch (error) {
+        console.error("Error de inicio de sesión:", error);
+        if (error.code === 'auth/wrong-password') {
+            showAuthModal("Contraseña incorrecta.");
+        } else {
+            showAuthModal("Ocurrió un error al iniciar sesión.");
+        }
+    } finally {
+        loadingOverlay.hidden = true;
+    }
+  });
+
+  // --- LÓGICA DE REGISTRO (ACTUALIZADA) ---
+  const registerForm = document.getElementById("register-form");
 
   registerForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      loadingOverlay.hidden = false;
+    e.preventDefault();
+    loadingOverlay.hidden = false;
 
-      // 1. Obtener todos los valores de los campos
-      const userId = document.getElementById("register-id").value.trim();
-      const nombres = document.getElementById("register-nombres").value.trim();
-      const apellidos = document.getElementById("register-apellidos").value.trim();
-      const cliente = document.getElementById("register-cliente").value.trim();
-      const unidad = document.getElementById("register-unidad").value.trim();
-      const tipo = document.getElementById("register-tipo").value.trim();
-      const password = document.getElementById("register-password").value;
-      const passwordConfirm = document.getElementById("register-password-confirm").value;
+    const userId = document.getElementById("register-id").value.trim();
+    const nombres = document.getElementById("register-nombres").value.trim();
+    const apellidos = document.getElementById("register-apellidos").value.trim();
+    const cliente = document.getElementById("register-cliente").value.trim();
+    const unidad = document.getElementById("register-unidad").value.trim();
+    const tipo = document.getElementById("register-tipo").value.trim();
+    const password = document.getElementById("register-password").value;
+    const passwordConfirm = document.getElementById("register-password-confirm").value;
 
-      // 2. Validaciones
-      if (!userId || !nombres || !apellidos || !cliente || !unidad || !password || !passwordConfirm) {
-          showAuthModal("Por favor, complete todos los campos.");
-          loadingOverlay.hidden = true;
-          return;
-      }
+    if (!userId || !nombres || !apellidos || !cliente || !unidad || !password || !passwordConfirm) {
+        showAuthModal("Por favor, complete todos los campos.");
+        loadingOverlay.hidden = true;
+        return;
+    }
 
-      if (password !== passwordConfirm) {
-          showAuthModal("Los campos Contraseña y Repetir Contraseña no son iguales.");
-          // Borrar los campos de contraseña
-          document.getElementById("register-password").value = "";
-          document.getElementById("register-password-confirm").value = "";
-          loadingOverlay.hidden = true;
-          return;
-      }
+    if (password !== passwordConfirm) {
+        showAuthModal("Los campos Contraseña y Repetir Contraseña no son iguales.");
+        document.getElementById("register-password").value = "";
+        document.getElementById("register-password-confirm").value = "";
+        loadingOverlay.hidden = true;
+        return;
+    }
 
-      // 3. Construir el correo electrónico
-      const constructedEmail = `${userId}@${cliente.toUpperCase()}.com.pe`;
+    // --- CAMBIO CLAVE AQUÍ ---
+    // El dominio ahora es siempre @liderman.com.pe
+    const constructedEmail = `${userId}@liderman.com.pe`;
 
-      try {
-          // 4. Crear el usuario en Firebase Authentication
-          const userCredential = await auth.createUserWithEmailAndPassword(constructedEmail, password);
-          
-          // 5. Preparar los datos para guardar en Firestore (en mayúsculas)
-          const userData = {
-              NOMBRES: nombres.toUpperCase(),
-              APELLIDOS: apellidos.toUpperCase(),
-              CLIENTE: cliente.toUpperCase(),
-              UNIDAD: unidad.toUpperCase(),
-              TIPO: tipo.toUpperCase(),
-              ESTADO: "INACTIVO" // Siempre se guarda como INACTIVO
-          };
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(constructedEmail, password);
+        
+        const userData = {
+            NOMBRES: nombres.toUpperCase(),
+            APELLIDOS: apellidos.toUpperCase(),
+            CLIENTE: cliente.toUpperCase(),
+            UNIDAD: unidad.toUpperCase(),
+            TIPO: tipo.toUpperCase(),
+            ESTADO: "INACTIVO"
+        };
 
-          // 6. Guardar los datos en la colección "USUARIOS" con el ID como documento
-          await db.collection('USUARIOS').doc(userId).set(userData);
+        await db.collection('USUARIOS').doc(userId).set(userData);
 
-          // 7. Mostrar mensaje de éxito y limpiar el formulario
-          showAuthModal("¡Usuario registrado exitosamente! Su cuenta está pendiente de activación.");
-          registerForm.reset();
+        showAuthModal("¡Usuario registrado exitosamente! Su cuenta está pendiente de activación.");
+        registerForm.reset();
 
-      } catch (error) {
-          console.error("Error al registrar:", error);
-          // Manejar errores comunes de Firebase
-          if (error.code === 'auth/email-already-in-use') {
-              showAuthModal("Este ID de usuario ya está registrado para este cliente.");
-          } else if (error.code === 'auth/weak-password') {
-              showAuthModal("La contraseña debe tener al menos 6 caracteres.");
-          } else {
-              showAuthModal("Ocurrió un error durante el registro.");
-          }
-      } finally {
-          loadingOverlay.hidden = true;
-      }
+    } catch (error) {
+        console.error("Error al registrar:", error);
+        if (error.code === 'auth/email-already-in-use') {
+            showAuthModal("Este ID de usuario ya está registrado.");
+        } else if (error.code === 'auth/weak-password') {
+            showAuthModal("La contraseña debe tener al menos 6 caracteres.");
+        } else {
+            showAuthModal("Ocurrió un error durante el registro.");
+        }
+    } finally {
+        loadingOverlay.hidden = true;
+    }
   });
 });
