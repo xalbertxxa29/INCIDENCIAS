@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ver Registros de Incidencias</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Font Awesome para íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- BOTÓN DE VOLVER SUPERIOR -->
         <a href="menu.html" class="btn-back">
             <i class="fas fa-arrow-left"></i>
             <span>Volver al Menú</span>
@@ -25,7 +23,11 @@
             <p>Selecciona una fecha para ver las incidencias.</p>
         </div>
 
-        <!-- BOTÓN DE VOLVER INFERIOR -->
+        <!-- BOTÓN PARA CARGAR MÁS REGISTROS -->
+        <div class="button-group" style="justify-content: center;">
+             <button id="cargar-mas-btn" class="btn-secondary" hidden>Cargar más</button>
+        </div>
+
         <a href="menu.html" class="btn-back btn-back-bottom">
             <i class="fas fa-arrow-left"></i>
             <span>Volver al Menú</span>

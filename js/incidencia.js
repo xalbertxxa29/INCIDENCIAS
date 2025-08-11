@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = doc.data();
                 const items = Object.values(data).sort();
                 createSearchableDropdown(input, list, items);
-                return items; // Devuelve los ítems para futuras actualizaciones
+                return items;
             } else {
                 input.placeholder = `No hay datos en ${collectionName}`;
                 return [];
@@ -156,11 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         let tiposIncidenciaItems = await populateAndSetupDropdown('DATOS', tipoIncidenciaInput, tipoIncidenciaList, CLIENTE, UNIDAD);
                         let ubicacionesItems = await populateAndSetupDropdown('UBICACIONES', ubicacionInput, ubicacionList, CLIENTE, UNIDAD);
                         
-                        // Configurar botones de añadir
                         addTipoIncidenciaBtn.onclick = () => {
                             showAddItemModal('Añadir Nuevo Tipo de Incidencia', async (newValue) => {
                                 const newIndex = tiposIncidenciaItems.length + 1;
-                                // Guardar el nuevo valor en mayúsculas
                                 await db.collection('DATOS').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).update({ [newIndex]: newValue.toUpperCase() });
                                 tiposIncidenciaItems = await populateAndSetupDropdown('DATOS', tipoIncidenciaInput, tipoIncidenciaList, CLIENTE, UNIDAD);
                                 tipoIncidenciaInput.value = newValue.toUpperCase();
@@ -170,7 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         addUbicacionBtn.onclick = () => {
                             showAddItemModal('Añadir Nueva Ubicación', async (newValue) => {
                                 const newIndex = ubicacionesItems.length + 1;
-                                // Guardar el nuevo valor en mayúsculas
                                 await db.collection('UBICACIONES').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).update({ [newIndex]: newValue.toUpperCase() });
                                 ubicacionesItems = await populateAndSetupDropdown('UBICACIONES', ubicacionInput, ubicacionList, CLIENTE, UNIDAD);
                                 ubicacionInput.value = newValue.toUpperCase();
@@ -223,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.addEventListener('touchend', e => { e.preventDefault(); stopDraw(); });
     clearFirmaBtn.addEventListener('click', () => { ctx.clearRect(0, 0, canvas.width, canvas.height); hasSigned = false; });
 
-    // --- LÓGICA DE ENVÍO DEL FORMULARIO ---
+    // --- LÓGICA DE ENVÍO DEL FORMULARIO (CON COMPRESIÓN) ---
     form.addEventListener('submit', async e => {
         e.preventDefault();
 
@@ -237,9 +234,20 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             let fotoURL = null;
             if (fotoInput.files[0]) {
-                const fotoFile = fotoInput.files[0];
-                const fotoRef = storage.ref(`incidencias/${Date.now()}_${fotoFile.name}`);
-                const snapshot = await fotoRef.put(fotoFile);
+                const imageFile = fotoInput.files[0];
+                console.log(`Tamaño original: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
+
+                const options = {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true
+                }
+                
+                const compressedFile = await imageCompression(imageFile, options);
+                console.log(`Tamaño comprimido: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+
+                const fotoRef = storage.ref(`incidencias/${Date.now()}_${compressedFile.name}`);
+                const snapshot = await fotoRef.put(compressedFile);
                 fotoURL = await snapshot.ref.getDownloadURL();
             }
 
@@ -249,7 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const firmaURL = await firmaSnapshot.ref.getDownloadURL();
 
             const incidenciaData = {
-                // Guardar los valores en mayúsculas
                 tipo: tipoIncidenciaInput.value.toUpperCase(),
                 ubicacion: ubicacionInput.value.toUpperCase(),
                 descripcion: document.getElementById('descripcion').value,

@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Incidencia</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Font Awesome para íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
     <div class="form-container">
         <h1>Registrar Nueva Incidencia</h1>
         <form id="incidencia-form">
-            <!-- CAMPO TIPO DE INCIDENCIA CON BOTÓN + -->
+            <!-- Campos del formulario... -->
             <div class="input-group">
                 <label for="tipo-incidencia-input">Tipo de Incidencia</label>
                 <div class="input-with-button">
@@ -25,8 +24,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- CAMPO UBICACIÓN CON BOTÓN + -->
             <div class="input-group">
                 <label for="ubicacion-input">Ubicación</label>
                 <div class="input-with-button">
@@ -39,15 +36,13 @@
                     </button>
                 </div>
             </div>
-
-            <!-- El resto del formulario se mantiene igual -->
             <div class="input-group">
                 <label for="descripcion">Descripción</label>
                 <textarea id="descripcion" rows="4" required></textarea>
             </div>
             <div class="input-group">
                 <label>Evidencia Fotográfica (Opcional)</label>
-                <label for="foto-input">Tomar foto</label>
+                <label for="foto-input">Tomar Foto</label>
                 <input type="file" id="foto-input" accept="image/*" capture="environment">
                 <img id="foto-preview" src="#" alt="Vista previa de la foto" hidden/>
             </div>
@@ -68,6 +63,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+    <!-- LIBRERÍA PARA COMPRESIÓN DE IMÁGENES -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/incidencia.js"></script>
 </body>
