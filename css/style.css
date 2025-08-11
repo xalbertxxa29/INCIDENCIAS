@@ -23,7 +23,6 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* Nuevo fondo degradado profesional */
   background-color: #1a202c;
   background-image:
     radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
@@ -52,7 +51,7 @@ body {
   background-color: var(--color-light-gray);
   border-radius: var(--radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: relative; /* Para posicionar el botón de volver */
+  position: relative;
 }
 
 .login-container {
@@ -297,8 +296,15 @@ input[type="file"] {
   cursor: pointer;
 }
 
+/* Estilos para Desplegables con Búsqueda */
+.input-with-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 .searchable-dropdown {
   position: relative;
+  flex-grow: 1;
 }
 .searchable-dropdown::after {
   content: '';
@@ -347,6 +353,21 @@ input[type="file"] {
 }
 .dropdown-content div:hover {
   background-color: #f1f1f1;
+}
+.btn-add {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.btn-add:hover {
+  transform: scale(1.1);
 }
 
 /* --- 8. Overlays & Spinners --- */
@@ -531,7 +552,7 @@ input[type="file"] {
   color: var(--color-primary);
 }
 
-/* --- 11. Botones de Volver (NUEVOS) --- */
+/* --- 11. Botones de Volver --- */
 .btn-back {
   display: inline-flex;
   align-items: center;

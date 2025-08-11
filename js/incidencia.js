@@ -9,8 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById('incidencia-form');
     const tipoIncidenciaInput = document.getElementById('tipo-incidencia-input');
     const tipoIncidenciaList = document.getElementById('tipo-incidencia-list');
+    const addTipoIncidenciaBtn = document.getElementById('add-tipo-incidencia-btn');
     const ubicacionInput = document.getElementById('ubicacion-input');
     const ubicacionList = document.getElementById('ubicacion-list');
+    const addUbicacionBtn = document.getElementById('add-ubicacion-btn');
     const fotoInput = document.getElementById('foto-input');
     const fotoPreview = document.getElementById('foto-preview');
     const canvas = document.getElementById('firma-canvas');
@@ -43,6 +45,43 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 hasSigned = false;
                 window.location.href = 'menu.html';
+            }
+        });
+    }
+
+    // --- NUEVA FUNCIÓN PARA MODAL DE AÑADIR ÍTEMS ---
+    function showAddItemModal(title, onSave) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        const box = document.createElement('div');
+        box.className = 'modal-box';
+        box.innerHTML = `
+            <h3>${title}</h3>
+            <div class="input-group" style="margin-top: 1.5rem;">
+                <input type="text" id="new-item-input" placeholder="Escriba el nuevo valor...">
+            </div>
+            <div class="button-group">
+                <button id="modal-cancel-btn" class="btn-secondary">Cancelar</button>
+                <button id="modal-save-btn" class="btn-primary">Guardar</button> 
+            </div>
+        `;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        const newItemInput = document.getElementById('new-item-input');
+        newItemInput.focus();
+
+        document.getElementById('modal-cancel-btn').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+
+        document.getElementById('modal-save-btn').addEventListener('click', () => {
+            const newValue = newItemInput.value.trim();
+            if (newValue) {
+                onSave(newValue);
+                document.body.removeChild(overlay);
+            } else {
+                newItemInput.style.borderColor = 'red';
             }
         });
     }
@@ -80,39 +119,27 @@ document.addEventListener("DOMContentLoaded", () => {
         ubicacionList.classList.remove('show');
     });
 
-    // --- FUNCIONES PARA POBLAR LOS DATOS DINÁMICAMENTE ---
-    async function populateTiposDeIncidencia(cliente, unidad) {
+    // --- FUNCIONES PARA POBLAR Y ACTUALIZAR DATOS ---
+    async function populateAndSetupDropdown(collectionName, input, list, cliente, unidad) {
         try {
-            const docRef = await db.collection('DATOS').doc(cliente).collection('UNIDAD').doc(unidad).get();
-            if (docRef.exists) {
-                const data = docRef.data();
+            const docRef = db.collection(collectionName).doc(cliente).collection('UNIDAD').doc(unidad);
+            const doc = await docRef.get();
+            if (doc.exists) {
+                const data = doc.data();
                 const items = Object.values(data).sort();
-                createSearchableDropdown(tipoIncidenciaInput, tipoIncidenciaList, items);
+                createSearchableDropdown(input, list, items);
+                return items; // Devuelve los ítems para futuras actualizaciones
             } else {
-                 tipoIncidenciaInput.placeholder = "No hay tipos de incidencia";
+                input.placeholder = `No hay datos en ${collectionName}`;
+                return [];
             }
         } catch (error) {
-            console.error("Error al cargar Tipos de Incidencia:", error);
-            tipoIncidenciaInput.placeholder = "Error al cargar datos";
+            console.error(`Error al cargar ${collectionName}:`, error);
+            input.placeholder = "Error al cargar datos";
+            return [];
         }
     }
 
-    async function populateUbicaciones(cliente, unidad) {
-        try {
-            const docRef = await db.collection('UBICACIONES').doc(cliente).collection('UNIDAD').doc(unidad).get();
-            if (docRef.exists) {
-                const data = docRef.data();
-                const items = Object.values(data).sort();
-                createSearchableDropdown(ubicacionInput, ubicacionList, items);
-            } else {
-                ubicacionInput.placeholder = "No hay ubicaciones";
-            }
-        } catch (error) {
-            console.error("Error al cargar Ubicaciones:", error);
-            ubicacionInput.placeholder = "Error al cargar datos";
-        }
-    }
-    
     // --- LÓGICA DE INICIALIZACIÓN DE PÁGINA ---
     auth.onAuthStateChanged(async (user) => {
         if (user) {
@@ -123,14 +150,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 const userDoc = await db.collection('USUARIOS').doc(userId).get();
                 if (userDoc.exists) {
                     currentUserData = userDoc.data();
-                    const cliente = currentUserData.CLIENTE;
-                    const unidad = currentUserData.UNIDAD;
+                    const { CLIENTE, UNIDAD } = currentUserData;
 
-                    if (cliente && unidad) {
-                        await Promise.all([
-                            populateTiposDeIncidencia(cliente, unidad),
-                            populateUbicaciones(cliente, unidad)
-                        ]);
+                    if (CLIENTE && UNIDAD) {
+                        let tiposIncidenciaItems = await populateAndSetupDropdown('DATOS', tipoIncidenciaInput, tipoIncidenciaList, CLIENTE, UNIDAD);
+                        let ubicacionesItems = await populateAndSetupDropdown('UBICACIONES', ubicacionInput, ubicacionList, CLIENTE, UNIDAD);
+                        
+                        // Configurar botones de añadir
+                        addTipoIncidenciaBtn.onclick = () => {
+                            showAddItemModal('Añadir Nuevo Tipo de Incidencia', async (newValue) => {
+                                const newIndex = tiposIncidenciaItems.length + 1;
+                                // Guardar el nuevo valor en mayúsculas
+                                await db.collection('DATOS').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).update({ [newIndex]: newValue.toUpperCase() });
+                                tiposIncidenciaItems = await populateAndSetupDropdown('DATOS', tipoIncidenciaInput, tipoIncidenciaList, CLIENTE, UNIDAD);
+                                tipoIncidenciaInput.value = newValue.toUpperCase();
+                            });
+                        };
+
+                        addUbicacionBtn.onclick = () => {
+                            showAddItemModal('Añadir Nueva Ubicación', async (newValue) => {
+                                const newIndex = ubicacionesItems.length + 1;
+                                // Guardar el nuevo valor en mayúsculas
+                                await db.collection('UBICACIONES').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).update({ [newIndex]: newValue.toUpperCase() });
+                                ubicacionesItems = await populateAndSetupDropdown('UBICACIONES', ubicacionInput, ubicacionList, CLIENTE, UNIDAD);
+                                ubicacionInput.value = newValue.toUpperCase();
+                            });
+                        };
+
                     } else {
                          console.error("Faltan datos de Cliente o Unidad en el perfil del usuario.");
                     }
@@ -203,8 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const firmaURL = await firmaSnapshot.ref.getDownloadURL();
 
             const incidenciaData = {
-                tipo: tipoIncidenciaInput.value,
-                ubicacion: ubicacionInput.value,
+                // Guardar los valores en mayúsculas
+                tipo: tipoIncidenciaInput.value.toUpperCase(),
+                ubicacion: ubicacionInput.value.toUpperCase(),
                 descripcion: document.getElementById('descripcion').value,
                 fotoURL: fotoURL,
                 firmaURL: firmaURL,
@@ -227,4 +274,3 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
-
