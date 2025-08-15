@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         addTipoIncidenciaBtn.onclick = () => {
                             showAddItemModal('Añadir Nuevo Tipo de Incidencia', async (newValue) => {
                                 const newIndex = tiposIncidenciaItems.length + 1;
-                                await db.collection('DATOS').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).update({ [newIndex]: newValue.toUpperCase() });
+                                await db.collection('DATOS').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).set({ [newIndex]: newValue.toUpperCase() }, { merge: true });
                                 tiposIncidenciaItems = await populateAndSetupDropdown('DATOS', tipoIncidenciaInput, tipoIncidenciaList, CLIENTE, UNIDAD);
                                 tipoIncidenciaInput.value = newValue.toUpperCase();
                             });
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         addUbicacionBtn.onclick = () => {
                             showAddItemModal('Añadir Nueva Ubicación', async (newValue) => {
                                 const newIndex = ubicacionesItems.length + 1;
-                                await db.collection('UBICACIONES').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).update({ [newIndex]: newValue.toUpperCase() });
+                                await db.collection('UBICACIONES').doc(CLIENTE).collection('UNIDAD').doc(UNIDAD).set({ [newIndex]: newValue.toUpperCase() }, { merge: true });
                                 ubicacionesItems = await populateAndSetupDropdown('UBICACIONES', ubicacionInput, ubicacionList, CLIENTE, UNIDAD);
                                 ubicacionInput.value = newValue.toUpperCase();
                             });
